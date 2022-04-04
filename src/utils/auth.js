@@ -1,30 +1,33 @@
 export const BASE_URL = 'https://auth.nomoreparties.co';
 
-export const register = (password, email) => {
+
+ const handleResponse = (response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return response.json()
+    .then((data) => {
+      const { statusCode } = data;
+      const { message } = data.message[0].message[0];
+      const error = new Error(message || 'Что-то пошло не так');
+      error.status = statusCode;
+      throw error;
+    })
+  }
+
+export const register = (email, password) => {
     return fetch(`${BASE_URL}/signup`, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ password, email })
+        body: JSON.stringify({ email, password })
     })
-        .then((response) => {
-            try {
-                if (response.status === 201) {
-                    return response.json();
-                }
-            } catch (e) {
-                return (e)
-            }
-        })
-        .then((res) => {
-            return res;
-        })
-        .catch((err) => console.log(err));
+    .then(handleResponse)
 };
 
-export const authorize = (password, email) => {
+export const authorize = (email, password) => {
     return fetch(`${BASE_URL}/signin`, {
         method: 'POST',
         headers: {
@@ -33,25 +36,9 @@ export const authorize = (password, email) => {
         },
         body: JSON.stringify({ password, email })
     })
-        .then((response) => {
-            try {
-                if (response.status === 200) {
-                    return response.json();
-                }
-            } catch (e) {
-                return (e)
-            }
-        })
-        .then((data) => {
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-                return data
-            } else {
-                return
-            }
-        });
-
+    .then(handleResponse)
 };
+
 
 export const getContent = (token) => {
     return fetch(`${BASE_URL}/users/me`, {

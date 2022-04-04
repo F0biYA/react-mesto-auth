@@ -1,12 +1,7 @@
 import React from 'react';
 import { Switch, Link, Route } from 'react-router-dom';
 
-function Header({ email }) {
-
-    /*функция выхода и удаления токена*/
-    function signOut() {
-        localStorage.removeItem('token');
-    }
+function Header(props) {
 
     return <header className="header">
         <div className="header__logo">
@@ -20,8 +15,8 @@ function Header({ email }) {
             </Route>
             <Route path="/">
                 <div className="header__info">
-                    <span className="header__email">{email}</span>
-                    <Link className="header__link" to='/sign-in' onClick={signOut}>Выйти</Link>
+                    <span className="header__email">{props.email}</span>
+                    <Link className="header__link" to='/sign-in' onClick={props.signOut}>Выйти</Link>
                 </div>
             </Route>
         </Switch>

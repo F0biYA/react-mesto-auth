@@ -14,6 +14,7 @@ import Login from './Login';
 import Register from './Register';
 import ProtectedRoute from './ProtectedRoute';
 import * as auth from '../utils/auth.js';
+import InfoTooltip from './InfoTooltip';
 
 function App() {
   /*переменные состояния */
@@ -27,6 +28,8 @@ function App() {
   const history = useHistory();
   const [loggedIn, setLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
+  const [status, setStatus] = useState();
+  const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
 
   /*закрытие всех попапов*/
   const closeAllPopups = () => {
@@ -43,25 +46,30 @@ function App() {
 
   /*получаю карточки с сервера*/
   useEffect(() => {
-    api.getServerCards()
-      .then((cardsArray) => {
-        setCards(cardsArray);
-      })
-      .catch((err) => {
-        console.log(`Невозможно отобразить карточки с сервера ${err}`);
-      })
-  }, [])
+    if (loggedIn) {
+      api.getServerCards()
+        .then((cardsArray) => {
+          setCards(cardsArray);
+        })
+        .catch((err) => {
+          console.log(`Невозможно отобразить карточки с сервера ${err}`);
+        })
+    }
+  }, [loggedIn])
+
 
   /*получаю информацию о профиле с сервера*/
   useEffect(() => {
-    api.getUserInfo()
-      .then((userInfoObject) => {
-        setCurrentUser(userInfoObject)
-      })
-      .catch((err) => {
-        console.log(`Невозможно получить информацию о пользователе ${err}`);
-      });
-  }, [])
+    if (loggedIn) {
+      api.getUserInfo()
+        .then((userInfoObject) => {
+          setCurrentUser(userInfoObject)
+        })
+        .catch((err) => {
+          console.log(`Невозможно получить информацию о пользователе ${err}`);
+        });
+    }
+  }, [loggedIn])
 
 
   /*функция изменения данных в профиле*/
@@ -130,9 +138,25 @@ function App() {
   }
 
   /*функция изменения переменной состояния  логина */
-  function handleLogin() {
-    setLoggedIn(true)
-    console.log(loggedIn);
+  function handleLogin(email, password) {
+    return auth.authorize(email, password)
+      .then((data) => {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          setLoggedIn(true);
+          history.push('/');
+        }
+      })
+      .catch(() => {
+        setIsInfoPopupOpen(true);
+        setStatus(false);
+      })
+  }
+
+
+  /*функция выхода и удаления токена (перенесена из header)*/
+  function signOut() {
+    localStorage.removeItem('token');
   }
 
   /*функция проверки токена */
@@ -153,6 +177,23 @@ function App() {
         });
     }
   }
+  /*функция регистрации с всплывающим окном статуса регистрации, перенесно из Register */
+  function handleRegister(email, password) {
+    return auth.register(email, password)
+    .then(() => {
+      setIsInfoPopupOpen(true);
+      setStatus(true);
+      history.push('/sign-in');
+    })
+    .catch(() => {
+      setIsInfoPopupOpen(true);
+      setStatus(false);
+    })
+  }
+
+  function handleClose() {
+    setIsInfoPopupOpen(false);
+  }
 
   /*эффект для проверки токена*/
   useEffect(() => {
@@ -164,13 +205,15 @@ function App() {
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
         <Header
-          email={email} />
+          email={email}
+          signOut={signOut}
+        />
         <Switch>
           <Route path="/sign-in">
             <Login handleLogin={handleLogin} />
           </Route>
           <Route path="/sign-up">
-            <Register />
+            <Register handleRegister={handleRegister}/>
           </Route>
           <ProtectedRoute path="/" loggedIn={loggedIn}>
             <Main
@@ -204,13 +247,17 @@ function App() {
               title="Вы уверены"
               buttonText="Да"
             />
-
             <ImagePopup
               card={selectedCard}
               onClose={closeAllPopups}
             />
           </ProtectedRoute>
         </Switch>
+        <InfoTooltip
+          status={status}
+          onClose={handleClose}
+          isOpen={isInfoPopupOpen}
+        />
       </div>
     </CurrentUserContext.Provider>
   );

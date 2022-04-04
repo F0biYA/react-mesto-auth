@@ -15,4 +15,6 @@
 
 .authorizationForm__input:focus {
     outline: none;
+    background-color: black;
+    
 }

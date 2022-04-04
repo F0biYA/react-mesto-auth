@@ -1,16 +1,10 @@
 import { React, useState } from 'react';
-import { useHistory } from 'react-router-dom';
-import InfoTooltip from './InfoTooltip';
-import * as auth from '../utils/auth.js';
 
 /* компонет для входа с всплывающим попапом статуса*/
 function Login({ handleLogin }) {
 
-  const history = useHistory();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [status, setStatus] = useState();
-  const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
 
   /* функция ввода в инпуты*/
   function handleChange(e) {
@@ -24,27 +18,12 @@ function Login({ handleLogin }) {
   /*функция входа  с всплывающим окном при неправильном вводе*/
   function handleSubmit(e) {
     e.preventDefault();
-    if (!email || !password) {
-      return;
-    }
-    auth.authorize(password, email)
-      .then((data) => {
-        if (data.token) {
-          console.log(data.token);
-          handleLogin();
-          history.push('/');
-        }
-      })
-      .catch((err) => {
-        setStatus(false);
-        setIsInfoPopupOpen(true);
-        console.log(err)
-      });
+    if (!email || !password) { 
+      return; 
+    } 
+    handleLogin(email, password)
   }
 
-  function handleClose() {
-    setIsInfoPopupOpen(false);
-  }
   return (
     <form className="authorizationForm" onSubmit={handleSubmit}>
       <h1 className="authorizationForm__title">Вход</h1>
@@ -73,11 +52,6 @@ function Login({ handleLogin }) {
       <button className="authorizationForm__submitButton" type="submit">
         Войти
       </button>
-      <InfoTooltip
-        status={status}
-        onClose={handleClose}
-        isOpen={isInfoPopupOpen}
-      />
     </form>
 
   );

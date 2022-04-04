@@ -1,15 +1,10 @@
 import { React, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import InfoTooltip from './InfoTooltip';
-import * as auth from '../utils/auth.js';
+import { Link, } from 'react-router-dom';
 
 /* компонент для регистрации пользователя с всплывающим попапом статуса регистрации*/
-function Register() {
-  const history = useHistory();
+function Register({handleRegister}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [status, setStatus] = useState();
-  const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
 
   /* функция воода данных в инпуты*/
   function handleChange(e) {
@@ -27,28 +22,9 @@ function Register() {
     if (!email || !password) {
       return;
     }
-    auth.register(password, email)
-      .then((res) => {
-        if (res) {
-          setStatus(true);
-          setIsInfoPopupOpen(true);
-        } else {
-          setStatus(false);
-          setIsInfoPopupOpen(true);
-        }
-      })
-      .catch((err) => {
-        console.log(err)
-      });
+    handleRegister(email, password);
   }
 
-  /* функция закрытия и перенаправления на Login*/
-  function handleClose() {
-    setIsInfoPopupOpen(false);
-    if (status) {
-      history.push('/sign-in');
-    }
-  }
   return (
     <form className="authorizationForm" onSubmit={handleSubmit}>
       <h1 className="authorizationForm__title">Регистрация</h1>
@@ -78,11 +54,6 @@ function Register() {
         Зарегистрироваться
       </button>
       <Link className="authorizationForm__tip" to="/sign-in"> Уже зарегистрированы? Войти</Link>
-      <InfoTooltip
-        status={status}
-        onClose={handleClose}
-        isOpen={isInfoPopupOpen}
-      />
     </form>
   );
 };
